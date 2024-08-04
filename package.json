@@ -1,0 +1,24 @@
+{
+  "name": "crawler",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.7.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.1",
+    "mongoose": "^8.5.2",
+    "redis": "^4.7.0",
+    "ssi-fcdata": "^2.2.0",
+    "ssi-fctrading": "^2.4.1",
+    "websocket": "^1.0.35",
+    "winston": "^3.13.1"
+  }
+}
