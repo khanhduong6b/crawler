@@ -56,7 +56,7 @@ function Crawler() {
             }
             const accessToken = await SELF.getAccessToken()
             return rq({ url: client.api.GET_INTRADAY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
-                console.log(response.data.totalRecord)
+                Logger.info(response.data.totalRecord)
                 if (response.data.totalRecord > 0) {
                 return response.data.data.map(item => {
                     return {
@@ -75,7 +75,7 @@ function Crawler() {
                     return []
                 }
             }).catch(error => {
-                console.log(error)
+                Logger.error(error)
             })
         }
     }

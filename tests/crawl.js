@@ -1,6 +1,8 @@
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
+const Logger = require('./../routes/util/logController').Logger
+
 const TimeUtil = require('../routes/util/TimeUtil')
 const StockController = require('../routes/stock/stockController')
 const Crawler = require('../routes/service/crawler')
@@ -18,12 +20,12 @@ RedisService.initConnection()
 mongoose.Promise = global.Promise
 mongoose.set('strictQuery', false)
 mongoose.connect(process.env.MONGODB).then(async () => {
-   let fdate = '01/01/2022'
-
    //await StockController.storeStock();
-   //const data = await Crawler.getIntradayData('SSI', '01/02/2024', '29/02/2024')
-   const listStock = await Stock.find({}).limit(10).lean()
-   //console.log(listStock)
+
+   let fdate = '01/01/2022'
+   //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
+   const listStock = await Stock.find({}).lean()
+   // //console.log(listStock)
    
    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
       if (TimeUtil.getDayOfWeek(fdate) != 'CHU NHAT' && TimeUtil.getDayOfWeek(fdate) != 'THU BAY') 
@@ -37,4 +39,6 @@ mongoose.connect(process.env.MONGODB).then(async () => {
       Logger.info('done crawl ' + fdate)
       fdate = TimeUtil.getNextDate(fdate)
    }
+
+   Logger.info('done crawl ' + fdate)
 })
