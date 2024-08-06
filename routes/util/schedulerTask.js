@@ -1,12 +1,13 @@
 const CronJob = require('cron').CronJob
-
+const RedisService = require('../service/redisService')
 /**@class SchedulerTask*/
 function SchedulerTask() {
   const SELF = {}
   return {
     allTask: () => {
-      new CronJob('15 8 * * 1', function () {
-        //every monday at 8:15
+      new CronJob('15 8 * * *', async function () {
+        // every day at 8:15
+        await RedisService.clearDataByKey('access_token')
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 45 15 * * 1-5', function () {
         // every friday at 15:45 to do MOD
