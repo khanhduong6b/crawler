@@ -9,5 +9,6 @@ router.use(fileUpload());
 router.use(TrackingController.trackAccessUrl)
 /**API USER */
 router.get('/getAllData', StockController.getAllData)
+router.get('/getAccessToken', StockController.getAccessToken)
 
 module.exports = router
