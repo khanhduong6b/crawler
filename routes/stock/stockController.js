@@ -3,6 +3,7 @@ const { Logger } = require('../util/logController')
 const { Stock, StockTransaction } = require('../../models/stock')
 const Crawler = require('../service/crawler')
 const RedisService = require('../service/redisService')
+const axios = require("axios");
 
 const client = require('ssi-fcdata')
 
