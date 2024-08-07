@@ -11,6 +11,21 @@ const rq = axios.create({
 
 function Crawler() {
     const SELF = {
+        setAccessToken: async () => {
+            const options = {
+                consumerID: process.env.ConsumerID,
+                consumerSecret: process.env.ConsumerSecret,
+            }
+            return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(async response => {
+                if (response.data.status === 200) {
+                    await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
+                    return response.data.data.accessToken;
+                } else {
+                    console.log(response.data.message)
+                    return false
+                }
+            })
+        },
         getAccessToken: async () => {
             return RedisService.receiveTokenInRedis('access_token').then(data => {
                 if (data) {
@@ -20,9 +35,9 @@ function Crawler() {
                         consumerID: process.env.ConsumerID,
                         consumerSecret: process.env.ConsumerSecret,
                     }
-                    return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(response => {
+                    return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(async response => {
                         if (response.data.status === 200) {
-                            RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
+                            await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
                             return response.data.data.accessToken;
                         } else {
                             console.log(response.data.message)
@@ -54,7 +69,7 @@ function Crawler() {
                 PageSize: 2000,
                 Asscending: true
             }
-            const accessToken = await SELF.getAccessToken()
+            const accessToken = await SELF.setAccessToken()
             return rq({ url: client.api.GET_INTRADAY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
                 Logger.info(response.data.totalRecord)
                 if (response.data.totalRecord > 0) {
