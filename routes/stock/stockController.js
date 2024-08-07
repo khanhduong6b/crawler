@@ -4,6 +4,7 @@ const { Stock, StockTransaction } = require('../../models/stock')
 const Crawler = require('../service/crawler')
 const RedisService = require('../service/redisService')
 const axios = require("axios");
+const TimeUtil = require('../util/TimeUtil')
 
 const client = require('ssi-fcdata')
 
@@ -39,9 +40,10 @@ function StockController() {
         },
         getNewData: async (req,res) => {
             const symbol = req.query.symbol
-            return RedisService.receiveTokenInRedis(symbol).then(data => {
+            return RedisService.receiveTokenInRedis(symbol).then(async data => {
                 if (data) {
-                    return res.status(200).json(data)
+                    await RedisService.clearDataByKey(symbol);
+                    return res.status(200).json(JSON.parse(data))
                 }
                 return res.status(200).json([])
             })
@@ -66,6 +68,19 @@ function StockController() {
                     })
                 }
             })
+        },
+        storeNewData: async (symbol) => {
+            const currentDate = new Date();
+            const [dataNew, dataOld] = await Promise.all([
+                Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
+                StockTransaction.find({symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate)}).lean()
+            ])
+            if (dataOld.length != dataNew.length) {
+                await StockTransaction.deleteMany({symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate)})
+                await StockTransaction.insertMany(dataNew)
+                await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
+            }
+            return res.status(200).json(data)
         }
     }
 }
