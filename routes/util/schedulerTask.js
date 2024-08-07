@@ -9,6 +9,11 @@ function SchedulerTask() {
         // every day at 8:15
         await RedisService.clearDataByKey('access_token')
       }, null, true, 'Asia/Ho_Chi_Minh').start()
+      // every 5 minute
+      new CronJob('*/5 * * * *', async function () {
+        // every 5 minute
+        await RedisService.clearDataByKey('access_token')
+      }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 45 15 * * 1-5', function () {
         // every friday at 15:45 to do MOD
       }, null, true, 'Asia/Ho_Chi_Minh').start()
