@@ -63,7 +63,7 @@ function RedisService() {
       })
     },
     clearDataByKey: async (key) => {
-      client.del(key)
+      client.del('stock_' + key)
       return Promise.resolve()
     },
     initConnection: async () => {

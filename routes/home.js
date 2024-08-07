@@ -10,5 +10,6 @@ router.use(TrackingController.trackAccessUrl)
 /**API USER */
 router.get('/getAllData', StockController.getAllData)
 router.get('/getAccessToken', StockController.getAccessToken)
+router.get('/stock/getNewData', StockController.getNewData)
 
 module.exports = router

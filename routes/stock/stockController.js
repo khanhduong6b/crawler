@@ -80,7 +80,6 @@ function StockController() {
                 await StockTransaction.insertMany(dataNew)
                 await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
             }
-            return res.status(200).json(data)
         }
     }
 }
