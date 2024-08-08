@@ -42,5 +42,5 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
    // Logger.info('done crawl ' + fdate)
 
-   StockController.storeNewData('TCI')
+   await StockController.storeNewData('TCI')
 })

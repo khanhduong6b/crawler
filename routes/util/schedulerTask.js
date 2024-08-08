@@ -1,4 +1,5 @@
 const CronJob = require('cron').CronJob
+const { Scheduler } = require('./logController')
 const RedisService = require('../service/redisService')
 /**@class SchedulerTask*/
 function SchedulerTask() {
@@ -12,6 +13,7 @@ function SchedulerTask() {
       new CronJob('*/30 * * * *', async function () {
         // every 30 minute
         await RedisService.clearDataByKey('access_token')
+        Scheduler.info('access_token - success')
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 45 15 * * 1-5', function () {
         // every friday at 15:45 to do MOD

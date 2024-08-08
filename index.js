@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require('body-parser');
 const RedisService = require('./routes/service/redisService')
-
+const SchedulerTask = require('./routes/util/schedulerTask')
 dotenv.config();
 const app = express();
 
@@ -23,8 +23,10 @@ RedisService.initConnection()
 mongoose.Promise = global.Promise
 mongoose.set('strictQuery', false)
 mongoose.connect(process.env.MONGODB).then(() => {
-    app.listen(process.env.WEB_PORT, () => {
+    app.listen(process.env.WEB_PORT, async () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${process.env.WEB_PORT}`);
+      await RedisService.clearDataByKey('access_token')
+      SchedulerTask.allTask()
   });
 })
 
