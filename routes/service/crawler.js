@@ -79,6 +79,7 @@ function Crawler() {
                         value: item.Value,
                         tradingDate: item.TradingDate,
                         time: item.Time,
+                        open: item.Open,
                         high: item.High,
                         low: item.Low,
                         close: item.Close,
