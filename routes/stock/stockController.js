@@ -35,8 +35,9 @@ function StockController() {
         },
         getAllData: async (req,res) => {
             const symbol = req.query.symbol
-            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1}).sort({tradingDate: 1, time: 1}).lean()
-            // convert ele
+            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1}).lean()
+            // sort by tradingDate and Time
+            data.sort((a, b) => new Date(a.tradingDate + ' ' + a.time) - new Date(b.tradingDate + ' ' + b.time))
             return res.status(200).json({ data })
         },
         getNewData: async (req,res) => {
