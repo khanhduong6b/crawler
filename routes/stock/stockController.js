@@ -35,8 +35,9 @@ function StockController() {
         },
         getAllData: async (req,res) => {
             const symbol = req.query.symbol
-            const data = await StockTransaction.find({symbol: symbol}).lean()
-            return res.status(200).json(data)
+            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1}).lean()
+            // convert ele
+            return res.status(200).json({ data })
         },
         getNewData: async (req,res) => {
             const symbol = req.query.symbol
