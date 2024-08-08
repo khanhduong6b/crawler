@@ -35,7 +35,7 @@ function StockController() {
         },
         getAllData: async (req,res) => {
             const symbol = req.query.symbol
-            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1}).lean()
+            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1}).sort({tradingDate: 1, time: 1}).lean()
             // convert ele
             return res.status(200).json({ data })
         },
@@ -44,7 +44,8 @@ function StockController() {
             return RedisService.receiveTokenInRedis(symbol).then(async data => {
                 if (data) {
                     await RedisService.clearDataByKey(symbol);
-                    return res.status(200).json(JSON.parse(data))
+                    const dataRes = JSON.parse(data)
+                    return res.status(200).json({data: dataRes.sort((a, b) => new Date(a.time) - new Date(b.time))})
                 }
                 return res.status(200).json([])
             })
