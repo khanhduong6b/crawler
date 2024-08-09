@@ -33,33 +33,33 @@ function StockController() {
             const data = await Crawler.getIntradayData(symbol, fDate, tDate)
             return data
         },
-        getAllData: async (req,res) => {
-           try {
-               const symbol = req.query.symbol
-               if (!symbol) return res.status(200).json({ data: [] })
-               const data = await StockTransaction.find({ symbol: symbol }, { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }).lean()
-               // sort by tradingDate and Time
-               data.sort((a, b) => {
-                   // First, sort by tradingDate
-                   const dateA = new Date(a.tradingDate.split('/').reverse().join('-'));
-                   const dateB = new Date(b.tradingDate.split('/').reverse().join('-'));
+        getAllData: async (req, res) => {
+            try {
+                const symbol = req.query.symbol
+                if (!symbol) return res.status(200).json({ data: [] })
+                const data = await StockTransaction.find({ symbol: symbol }, { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }).lean()
+                // sort by tradingDate and Time
+                data.sort((a, b) => {
+                    // First, sort by tradingDate
+                    const dateA = new Date(a.tradingDate.split('/').reverse().join('-'));
+                    const dateB = new Date(b.tradingDate.split('/').reverse().join('-'));
 
-                   if (dateA < dateB) return -1;
-                   if (dateA > dateB) return 1;
+                    if (dateA < dateB) return -1;
+                    if (dateA > dateB) return 1;
 
-                   // If tradingDate is the same, sort by time
-                   const timeA = a.time.split(':').join('');
-                   const timeB = b.time.split(':').join('');
+                    // If tradingDate is the same, sort by time
+                    const timeA = a.time.split(':').join('');
+                    const timeB = b.time.split(':').join('');
 
-                   return timeA.localeCompare(timeB);
-               });
+                    return timeA.localeCompare(timeB);
+                });
 
-               return res.status(200).json({ data })
-           } catch (error) {
-               return res.status(500).json({ error })
-           }
+                return res.status(200).json({ data })
+            } catch (error) {
+                return res.status(500).json({ error })
+            }
         },
-        getNewData: async (req,res) => {
+        getNewData: async (req, res) => {
             try {
                 const symbol = req.query.symbol
                 if (!symbol) return res.status(200).json({ data: [] })
@@ -67,7 +67,21 @@ function StockController() {
                     if (data) {
                         await RedisService.clearDataByKey(symbol);
                         const dataRes = JSON.parse(data)
-                        return res.status(200).json({ data: dataRes.sort((a, b) => new Date(a.time) - new Date(b.time)) })
+                        return res.status(200).json({
+                            data: dataRes.sort((a, b) => {
+                                const dateA = new Date(a.tradingDate.split('/').reverse().join('-'));
+                                const dateB = new Date(b.tradingDate.split('/').reverse().join('-'));
+
+                                if (dateA < dateB) return -1;
+                                if (dateA > dateB) return 1;
+
+                                // If tradingDate is the same, sort by time
+                                const timeA = a.time.split(':').join('');
+                                const timeB = b.time.split(':').join('');
+
+                                return timeA.localeCompare(timeB);
+                            })
+                        })
                     }
                     return res.status(200).json([])
                 })
@@ -78,7 +92,7 @@ function StockController() {
         getAccessToken: async (req, res) => {
             return RedisService.receiveTokenInRedis('access_token').then(data => {
                 if (data) {
-                    return res.status(200).json({token: data})
+                    return res.status(200).json({ token: data })
                 } else {
                     const options = {
                         consumerID: process.env.ConsumerID,
@@ -100,10 +114,10 @@ function StockController() {
             const currentDate = new Date();
             const [dataNew, dataOld] = await Promise.all([
                 Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
-                StockTransaction.find({symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate)}).lean()
+                StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate) }).lean()
             ])
             if (dataOld.length != dataNew.length) {
-                await StockTransaction.deleteMany({symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate)})
+                await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate) })
                 await StockTransaction.insertMany(dataNew)
                 await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
             }
