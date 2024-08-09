@@ -8,7 +8,7 @@ const Stock = mongoose.Schema({
 }, { versionKey: false, timestamps: true })
 
 const StockTransaction = mongoose.Schema({
-    symbol: { type: String },
+    symbol: { type: String, index: true },
     tradingDate: { type: String },
     time: { type: String },
     open: { type: Number },
