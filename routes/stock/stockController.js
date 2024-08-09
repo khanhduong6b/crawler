@@ -39,7 +39,8 @@ function StockController() {
                if (!symbol) return res.status(200).json({ data: [] })
                const data = await StockTransaction.find({ symbol: symbol }, { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }).lean()
                // sort by tradingDate and Time
-               data.sort((a, b) => new Date(a.tradingDate + ' ' + a.time) - new Date(b.tradingDate + ' ' + b.time))
+               data.sort((a, b) => a.time.localeCompare(b.time))
+               data.sort((a, b) => TimeUtil.getStrDateFromIntDate(a.tradingDate) - TimeUtil.getStrDateFromIntDate(b.tradingDate))
                return res.status(200).json({ data })
            } catch (error) {
                return res.status(500).json({ error })
