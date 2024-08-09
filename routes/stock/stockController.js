@@ -34,22 +34,32 @@ function StockController() {
             return data
         },
         getAllData: async (req,res) => {
-            const symbol = req.query.symbol
-            const data = await StockTransaction.find({symbol: symbol}, {_id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1}).lean()
-            // sort by tradingDate and Time
-            data.sort((a, b) => new Date(a.tradingDate + ' ' + a.time) - new Date(b.tradingDate + ' ' + b.time))
-            return res.status(200).json({ data })
+           try {
+               const symbol = req.query.symbol
+               if (!symbol) return res.status(200).json({ data: [] })
+               const data = await StockTransaction.find({ symbol: symbol }, { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }).lean()
+               // sort by tradingDate and Time
+               data.sort((a, b) => new Date(a.tradingDate + ' ' + a.time) - new Date(b.tradingDate + ' ' + b.time))
+               return res.status(200).json({ data })
+           } catch (error) {
+               return res.status(500).json({ error })
+           }
         },
         getNewData: async (req,res) => {
-            const symbol = req.query.symbol
-            return RedisService.receiveTokenInRedis(symbol).then(async data => {
-                if (data) {
-                    await RedisService.clearDataByKey(symbol);
-                    const dataRes = JSON.parse(data)
-                    return res.status(200).json({data: dataRes.sort((a, b) => new Date(a.time) - new Date(b.time))})
-                }
-                return res.status(200).json([])
-            })
+            try {
+                const symbol = req.query.symbol
+                if (!symbol) return res.status(200).json({ data: [] })
+                return RedisService.receiveTokenInRedis(symbol).then(async data => {
+                    if (data) {
+                        await RedisService.clearDataByKey(symbol);
+                        const dataRes = JSON.parse(data)
+                        return res.status(200).json({ data: dataRes.sort((a, b) => new Date(a.time) - new Date(b.time)) })
+                    }
+                    return res.status(200).json([])
+                })
+            } catch (error) {
+                return res.status(500).json({ error })
+            }
         },
         getAccessToken: async (req, res) => {
             return RedisService.receiveTokenInRedis('access_token').then(data => {
