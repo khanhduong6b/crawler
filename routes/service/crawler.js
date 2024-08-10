@@ -3,6 +3,7 @@ const { Logger } = require('../util/logController')
 const RedisService = require('./redisService')
 const client = require('ssi-fcdata')
 const axios = require("axios");
+const TimeUtil = require('../util/TimeUtil')
 
 const rq = axios.create({
     baseURL: "https://fc-data.ssi.com.vn/",
@@ -77,7 +78,7 @@ function Crawler() {
                     return {
                         symbol: item.Symbol,
                         value: item.Value,
-                        tradingDate: item.TradingDate,
+                        tradingDate: `${item.TradingDate.slice(6, 10)}-${item.TradingDate.slice(3, 5)}-${item.TradingDate.slice(0, 2)}`,
                         time: item.Time,
                         open: item.Open,
                         high: item.High,

@@ -35,28 +35,17 @@ function StockController() {
         },
         getAllData: async (req, res) => {
             try {
-                const symbol = req.query.symbol
-                if (!symbol) return res.status(200).json({ data: [] })
-                const data = await StockTransaction.find({ symbol: symbol }, { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }).lean()
-                // sort by tradingDate and Time
-                data.sort((a, b) => {
-                    // First, sort by tradingDate
-                    const dateA = new Date(a.tradingDate.split('/').reverse().join('-'));
-                    const dateB = new Date(b.tradingDate.split('/').reverse().join('-'));
+                const symbol = req.query.symbol;
+                if (!symbol) return res.status(200).json({ data: [] });
 
-                    if (dateA < dateB) return -1;
-                    if (dateA > dateB) return 1;
+                const data = await StockTransaction.find(
+                    { symbol: symbol },
+                    { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+                ).sort({ tradingDate: 1, time: 1 }).lean();
 
-                    // If tradingDate is the same, sort by time
-                    const timeA = a.time.split(':').join('');
-                    const timeB = b.time.split(':').join('');
-
-                    return timeA.localeCompare(timeB);
-                });
-
-                return res.status(200).json({ data })
+                return res.status(200).json({ data });
             } catch (error) {
-                return res.status(500).json({ error })
+                return res.status(500).json({ error });
             }
         },
         getNewData: async (req, res) => {
@@ -68,19 +57,7 @@ function StockController() {
                         await RedisService.clearDataByKey(symbol);
                         const dataRes = JSON.parse(data)
                         return res.status(200).json({
-                            data: dataRes.sort((a, b) => {
-                                const dateA = new Date(a.tradingDate.split('/').reverse().join('-'));
-                                const dateB = new Date(b.tradingDate.split('/').reverse().join('-'));
-
-                                if (dateA < dateB) return -1;
-                                if (dateA > dateB) return 1;
-
-                                // If tradingDate is the same, sort by time
-                                const timeA = a.time.split(':').join('');
-                                const timeB = b.time.split(':').join('');
-
-                                return timeA.localeCompare(timeB);
-                            })
+                            data: dataRes.sort((a, b) => a.time.localeCompare(b.time))
                         })
                     }
                     return res.status(200).json([])
