@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
    let fdate = '01/01/2022'
    //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
-   const listStock = await Stock.find({ symbol: {$in: ['TCI', 'VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']} }).lean()
+   const listStock = await Stock.find({ symbol: {$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']} }).lean()
    // //console.log(listStock)
 
    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
