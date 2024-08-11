@@ -36,14 +36,17 @@ function StockController() {
         getAllData: async (req, res) => {
             try {
                 const symbol = req.query.symbol;
+                const page = req.query.page || 1;
                 if (!symbol) return res.status(200).json({ data: [] });
+
+                const totalDoc = await StockTransaction.countDocuments({ symbol: symbol });
 
                 const data = await StockTransaction.find(
                     { symbol: symbol },
                     { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
-                ).sort({ tradingDate: 1, time: 1 }).lean();
+                ).sort({ tradingDate: 1, time: 1 }).skip((page - 1) * 1000).limit(1000).lean();
 
-                return res.status(200).json({ data });
+                return res.status(200).json({ totalPage: Math.ceil(totalDoc / 1000), data });
             } catch (error) {
                 return res.status(500).json({ error });
             }
@@ -91,10 +94,10 @@ function StockController() {
             const currentDate = new Date();
             const [dataNew, dataOld] = await Promise.all([
                 Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
-                StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate) }).lean()
+                StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
             ])
             if (dataOld.length != dataNew.length) {
-                await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('DD/MM/YYYY', currentDate) })
+                await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
                 await StockTransaction.insertMany(dataNew)
                 await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
             }
