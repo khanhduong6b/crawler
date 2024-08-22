@@ -22,15 +22,17 @@ mongoose.set('strictQuery', false)
 mongoose.connect(process.env.MONGODB).then(async () => {
    // //await StockController.storeStock();
 
-   let fdate = '01/01/2022'
+   let fdate = '20/06/2022'
    //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
-   const listStock = await Stock.find({ symbol: {$in: ['TCI', 'VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']} }).lean()
+	//{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
+   //const listStock = await Stock.find({ symbol: 'PPT'}).lean()
+
    // //console.log(listStock)
 
    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
       if (TimeUtil.getDayOfWeek(fdate) != 'CHU NHAT' && TimeUtil.getDayOfWeek(fdate) != 'THU BAY')
-         for (let i = 0; i < listStock.length; i++) {
-            const symbol = listStock[i].symbol
+         {
+            const symbol = "PPT"
             const data = await Crawler.getIntradayData(symbol, fdate, fdate)
             try {
                if (data.length > 0)

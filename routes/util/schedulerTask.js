@@ -10,6 +10,9 @@ function SchedulerTask() {
       // every 5 minute
       new CronJob('*/5 * * * *', async function () {
         await StockController.storeNewData('TCI')
+	setTimeout(async () => {
+		await StockController.storeNewData('PPT')
+	},1000)
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('*/30 * * * *', async function () {
         // every 30 minute
