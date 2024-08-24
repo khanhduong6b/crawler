@@ -63,7 +63,7 @@ function StockController() {
                             data: dataRes.sort((a, b) => a.time.localeCompare(b.time))
                         })
                     }
-                    return res.status(200).json([])
+                    return res.status(200).json({ data: [] })
                 })
             } catch (error) {
                 return res.status(500).json({ error })
@@ -91,15 +91,21 @@ function StockController() {
             })
         },
         storeNewData: async (symbol) => {
-            const currentDate = new Date();
-            const [dataNew, dataOld] = await Promise.all([
-                Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
-                StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
-            ])
-            if (dataOld.length != dataNew.length) {
-                await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
-                await StockTransaction.insertMany(dataNew)
-                await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
+            const currentDate = new Date(TimeUtil.strToDate('23/08/2024 09:11:27'));
+            console.log(TimeUtil.getStrDate('DD/MM/YYYY', currentDate))
+            try {
+                const [dataNew, dataOld] = await Promise.all([
+                    Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
+                    StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
+                ])
+                if (dataOld.length != dataNew.length) {
+                    await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
+                    await StockTransaction.insertMany(dataNew)
+                    await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
+                }
+                Logger.info('storeNewData - success')
+            } catch (error) {
+                Logger.error(error)
             }
         }
     }
