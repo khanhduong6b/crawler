@@ -48,5 +48,6 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
    // Logger.info('done crawl ' + fdate)
 
-   await StockController.storeNewData('TCI')
+   //await StockController.storeNewData('TCI')
+   console.log(new Date(new Date() - 60 * 60 * 24 * 1000))
 })

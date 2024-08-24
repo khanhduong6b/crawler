@@ -57,7 +57,7 @@ function StockController() {
                 if (!symbol) return res.status(200).json({ data: [] })
                 
                 const data = await StockTransaction.find(
-                    { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date())}, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 86400))}] },
+                    { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000))}] },
                     { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
                 ).sort({ time: 1 }).lean();
 
