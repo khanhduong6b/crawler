@@ -56,6 +56,17 @@ function StockController() {
                 const symbol = req.query.symbol
                 if (!symbol) return res.status(200).json({ data: [] })
                 
+                const today = new Date();
+                // Lấy chỉ số của ngày trong tuần (0 - Chủ Nhật, 1 - Thứ Hai, ..., 6 - Thứ Bảy)
+                const dayIndex = today.getDay();
+                if (dayIndex == 1) {
+                    const data = await StockTransaction.find(
+                        { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000 * 3)) }] },
+                        { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+                    ).sort({ time: 1 }).lean();
+                    return res.status(200).json({ data });
+                }
+
                 const data = await StockTransaction.find(
                     { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000))}] },
                     { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
