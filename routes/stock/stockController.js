@@ -100,8 +100,8 @@ function StockController() {
                     await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
                     await StockTransaction.insertMany(dataNew)
                     //await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
+                    Logger.info('storeNewData - success')
                 }
-                Logger.info('storeNewData - success')
             } catch (error) {
                 Logger.error(error)
             }
