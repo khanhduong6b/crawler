@@ -4,18 +4,25 @@ const RedisService = require('../service/redisService')
 const StockController = require('../stock/stockController')
 /**@class SchedulerTask*/
 function SchedulerTask() {
-  const SELF = {}
+  const SELF = {
+    delay: function (ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  }
   return {
     allTask: () => {
-      // every 5 minute
-      new CronJob('*/5 * * * *', async function () {
-        await StockController.storeNewData('TCI')
-	setTimeout(async () => {
-		await StockController.storeNewData('PPT')
-	},1000)
+      // every 5 minute in week from monday to friday
+      new CronJob('*/5 * * * 1-5', async function () {
+        const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT', 'TCI', 'PPT']
+        for (let i = 0; i < listStock.length; i++) {
+          const symbol = listStock[i]
+          await StockController.storeNewData(symbol)
+          Scheduler.info(symbol + ' - success')
+          SELF.delay(1000)
+        }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
-      new CronJob('*/30 * * * *', async function () {
-        // every 30 minute
+      // every 30 minute in week from monday to friday
+      new CronJob('*/30 * * * 1-5', async function () {
         await RedisService.clearDataByKey('access_token')
         Scheduler.info('access_token - success')
       }, null, true, 'Asia/Ho_Chi_Minh').start()

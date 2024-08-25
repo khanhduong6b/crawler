@@ -52,7 +52,7 @@ function Crawler() {
         /**@description: Crawl data from SSI */
         crawlStock: async () => {
             var request = {
-                market: 'HOSE',
+                market: 'HSX',
                 pageIndex: 1,
                 pageSize: 1000
             }
