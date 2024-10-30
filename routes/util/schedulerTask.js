@@ -2,6 +2,7 @@ const CronJob = require('cron').CronJob
 const { Scheduler } = require('./logController')
 const RedisService = require('../service/redisService')
 const StockController = require('../stock/stockController')
+const { Stock } = require('../../models/stock')
 /**@class SchedulerTask*/
 function SchedulerTask() {
   const SELF = {
@@ -13,16 +14,16 @@ function SchedulerTask() {
     allTask: () => {
       // every 5 minute in week from monday to friday
       new CronJob('*/5 * * * 1-5', async function () {
-        const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT', 'TCI', 'PPT']
+        const listStock = await Stock.find({}).lean()
         for (let i = 0; i < listStock.length; i++) {
           const symbol = listStock[i]
           await StockController.storeNewData(symbol)
           Scheduler.info(symbol + ' - success')
-          SELF.delay(1000)
+          await SELF.delay(1000)
         }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       // every 30 minute in week from monday to friday
-      new CronJob('*/30 * * * 1-5', async function () {
+      new CronJob('*/5 * * * 1-5', async function () {
         await RedisService.clearDataByKey('access_token')
         Scheduler.info('access_token - success')
       }, null, true, 'Asia/Ho_Chi_Minh').start()

@@ -21,32 +21,33 @@ mongoose.Promise = global.Promise
 mongoose.set('strictQuery', false)
 mongoose.connect(process.env.MONGODB).then(async () => {
    // //await StockController.storeStock();
-
-   let fdate = '10/08/2024'
+   console.log('done connect db')
+   let fdate = '01/10/2024'
    //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
-	//{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
-   //const listStock = await Stock.find({ symbol: 'PPT'}).lean()
-   const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']
+   //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
+   const listStock = await Stock.find().lean()
+   //const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']
    //console.log(listStock)
 
    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
-      if (TimeUtil.getDayOfWeek(fdate) != 'CHU NHAT' && TimeUtil.getDayOfWeek(fdate) != 'THU BAY')
-         {
-            for (let i = 0; i < listStock.length; i++)
-           {
-               const symbol = listStock[i]
-               const data = await Crawler.getIntradayData(symbol, fdate, fdate)
-               try {
-                  if (data.length > 0)
-                     await StockTransaction.insertMany(data)
-               } catch (error) {
-                  Logger.error(error)
-               }
-               await delay(1000)
-           }
+      const tdate = '26/10/2024'
+      for (let i = 0; i < listStock.length; i++) {
+         const symbol = listStock[i].symbol
+         if (symbol.length != 3) {
+            console.log(symbol)
+            continue
          }
+         try {
+            const data = await Crawler.getIntradayData(symbol, fdate, tdate)
+            if (data.length > 0)
+               await StockTransaction.insertMany(data)
+         } catch (error) {
+            Logger.error(error)
+         }
+         await delay(1000)
+      }
       Logger.info('done crawl ' + fdate)
-      fdate = TimeUtil.getNextDate(fdate)
+      fdate = TimeUtil.getNextMonth(fdate)
    }
 
    Logger.info('done crawl ' + fdate)

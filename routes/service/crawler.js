@@ -38,7 +38,7 @@ function Crawler() {
                     }
                     return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(async response => {
                         if (response.data.status === 200) {
-                            await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
+                            //await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
                             return response.data.data.accessToken;
                         } else {
                             console.log(response.data.message)
@@ -52,12 +52,13 @@ function Crawler() {
         /**@description: Crawl data from SSI */
         crawlStock: async () => {
             var request = {
-                market: 'HSX',
+                market: 'HNX',
                 pageIndex: 1,
                 pageSize: 1000
             }
             const accessToken = await SELF.getAccessToken()
             return rq({ url: client.api.GET_SECURITIES_LIST, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
+                console.log('crawlStock - totalRecord: ' + response.data.totalRecord)
                 return response.data.data
             })
         },
@@ -71,8 +72,8 @@ function Crawler() {
                 Asscending: true
             }
             const accessToken = await SELF.getAccessToken()
-            return rq({ url: client.api.GET_INTRADAY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
-                Logger.info('symbol: ' + symbol + ' - totalRecord: ' + response.data.totalRecord)
+            return rq({ url: client.api.GET_DAILY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
+                Logger.info(fDate + ' - symbol: ' + symbol + ' - totalRecord: ' + response.data.totalRecord)
                 if (response.data.totalRecord > 0) {
                 return response.data.data.map(item => {
                     return {
@@ -88,7 +89,7 @@ function Crawler() {
                     }
                 })
                 } else {
-                    console.log(response.data.message)
+                    console.log(response.data)
                     return []
                 }
             }).catch(error => {
