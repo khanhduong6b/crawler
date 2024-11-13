@@ -12,6 +12,9 @@ const rq = axios.create({
 
 function Crawler() {
     const SELF = {
+        delay: function (ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+          },
         setAccessToken: async () => {
             const options = {
                 consumerID: process.env.ConsumerID,
@@ -38,7 +41,8 @@ function Crawler() {
                     }
                     return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(async response => {
                         if (response.data.status === 200) {
-                            //await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
+                            await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
+                            SELF.delay(1000)
                             return response.data.data.accessToken;
                         } else {
                             console.log(response.data.message)
@@ -92,7 +96,8 @@ function Crawler() {
                     console.log(response.data)
                     return []
                 }
-            }).catch(error => {
+            }).catch(async error => {
+                await RedisService.clearDataByKey('access_token')
                 Logger.error(error)
             })
         }

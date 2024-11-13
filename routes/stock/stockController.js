@@ -100,8 +100,7 @@ function StockController() {
             })
         },
         storeNewData: async (symbol) => {
-            const currentDate = new Date(TimeUtil.strToDate('23/08/2024 09:11:27'));
-            console.log(TimeUtil.getStrDate('DD/MM/YYYY', currentDate))
+            const currentDate = new Date();
             try {
                 const [dataNew, dataOld] = await Promise.all([
                     Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
