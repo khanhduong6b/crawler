@@ -22,7 +22,7 @@ mongoose.set('strictQuery', false)
 mongoose.connect(process.env.MONGODB).then(async () => {
    // //await StockController.storeStock();
    console.log('done connect db')
-   let fdate = '01/10/2024'
+   let fdate = '26/10/2024'
    //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
    //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
    const listStock = await Stock.find().lean()
@@ -30,7 +30,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
    //console.log(listStock)
 
    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
-      const tdate = '26/10/2024'
+      const tdate = '13/11/2024'
       for (let i = 0; i < listStock.length; i++) {
          const symbol = listStock[i].symbol
          if (symbol.length != 3) {
