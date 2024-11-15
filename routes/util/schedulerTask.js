@@ -6,7 +6,7 @@ const { Stock } = require('../../models/stock')
 /**@class SchedulerTask*/
 function SchedulerTask() {
   const SELF = {
-    delay: function (ms) {
+    delay: async function (ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
   }
