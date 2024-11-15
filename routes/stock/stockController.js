@@ -17,6 +17,7 @@ const rq = axios.create({
 function StockController() {
     const SELF = {
         createModelStockTransactionBySymbol: (symbol) => {
+            mongoose.pluralize(null);
             const schema = mongoose.Schema({
                 symbol: { type: String, index: true },
                 tradingDate: { type: String },
