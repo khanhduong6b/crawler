@@ -5,6 +5,7 @@ const Crawler = require('../service/crawler')
 const RedisService = require('../service/redisService')
 const axios = require("axios");
 const TimeUtil = require('../util/TimeUtil')
+const mongoose = require('mongoose')
 
 const client = require('ssi-fcdata')
 
