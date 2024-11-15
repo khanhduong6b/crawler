@@ -17,10 +17,11 @@ function SchedulerTask() {
         await RedisService.clearDataByKey('access_token')
         const listStock = await Stock.find({ market: { $in: ['HNX', 'UPCOM'] } }).lean()
         for (let i = 0; i < listStock.length; i++) {
-          const symbol = listStock[i].symbol
-          await StockController.storeNewData(symbol)
-          Scheduler.info(symbol + ' - success')
-          await SELF.delay(1500)
+          setTimeout(async () => {
+            const symbol = listStock[i].symbol
+            await StockController.storeNewData(symbol)
+            Scheduler.info(symbol + ' - success')
+          }, 1000 * i)
         }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       // every 30 minute in week from monday to friday
