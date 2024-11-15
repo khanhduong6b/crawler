@@ -36,7 +36,7 @@ function SchedulerTask() {
       new CronJob('0 45 15 * * 1-5', function () {
         // every friday at 15:45 to do MOD
       }, null, true, 'Asia/Ho_Chi_Minh').start()
-      new CronJob('00 00 23 * * 1-5', async function () {
+      new CronJob('0 0 23 * * 1-5', async function () {
         await RedisService.clearDataByKey('access_token')
         await StockController.jobSaveDailyData()
         Logger.info('jobSaveDailyData - success')
