@@ -14,6 +14,33 @@ const rq = axios.create({
 })
 
 function StockController() {
+    const SELF = {
+        createModelStockTransactionMonthYear: (month, year) => {
+            const schema = mongoose.Schema({
+                symbol: { type: String, index: true },
+                tradingDate: { type: String },
+                time: { type: String },
+                open: { type: Number },
+                high: { type: Number },
+                low: { type: Number },
+                close: { type: Number },
+                volume: { type: Number },
+            }, { versionKey: false, timestamps: true, strict: false })
+            return mongoose.model(`stock_transaction_${month}${year}`, schema)
+        },
+        getModelStockTransactionByMonthYear: (month, year) => {
+            const modelName = `stock_transaction_${month}${year}`
+            if (mongoose.models[modelName]) {
+                return mongoose.models[modelName]; // Return the existing model
+            } else {
+                // If it doesn't exist, create and return the model
+                return SELF.createModelStockTransactionMonthYear(month, year);
+            }
+        },
+        delay: (ms) => {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
     return {
         storeStock: async () => {
             const data = await Crawler.crawlStock()
@@ -29,7 +56,7 @@ function StockController() {
             await Stock.insertMany(list)
             Logger.info('storeStock - success')
         },
-        getTransactionData: async (symbol, fDate, tDate) => {
+        getTransactionData: async (symbol, currentDate, tDate) => {
             const data = await Crawler.getIntradayData(symbol, fDate, tDate)
             return data
         },
@@ -55,7 +82,7 @@ function StockController() {
             try {
                 const symbol = req.query.symbol
                 if (!symbol) return res.status(200).json({ data: [] })
-                
+
                 const today = new Date();
                 // Lấy chỉ số của ngày trong tuần (0 - Chủ Nhật, 1 - Thứ Hai, ..., 6 - Thứ Bảy)
                 const dayIndex = today.getDay();
@@ -68,7 +95,7 @@ function StockController() {
                 }
 
                 const data = await StockTransaction.find(
-                    { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000))}] },
+                    { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000)) }] },
                     { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
                 ).sort({ time: 1 }).lean();
 
@@ -101,6 +128,10 @@ function StockController() {
         },
         storeNewData: async (symbol) => {
             const currentDate = new Date();
+            const dateInt = TimeUtil.getIntDateFromStrDate(currentDate)
+            const month = dateInt.toString().substring(4, 6)
+            const year = dateInt.toString().substring(0, 4)
+            const StockTransaction = SELF.getModelStockTransactionByMonthYear(month, year)
             try {
                 const [dataNew, dataOld] = await Promise.all([
                     Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
@@ -115,7 +146,27 @@ function StockController() {
             } catch (error) {
                 Logger.error(error)
             }
-        }
+        },
+        jobSaveDailyData: async () => {
+            const currentDate = TimeUtil.getStrDate('DD/MM/YYYY');
+            const listStock = await Stock.find().lean()
+            for (let i = 0; i < listStock.length; i++) {
+                const symbol = listStock[i].symbol
+                if (symbol.length != 3) {
+                    console.log(symbol)
+                    continue
+                }
+                try {
+                    const dataNew = await Crawler.getDailyData(symbol, currentDate, currentDate)
+                    await StockTransaction.insertMany(dataNew)
+                    //await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
+                    Logger.info(currentDate + ' -> ' + currentDate + ' - symbol: ' + symbol + ' - totalRecord: ' + dataNew.length)
+                } catch (error) {
+                    Logger.error(error)
+                }
+                await SELF.delay(1000)
+            }
+        },
     }
 }
 

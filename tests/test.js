@@ -1,24 +1,6 @@
-fetch("https://apibhx.tgdd.vn/Location/GetStoreByLocation", {
-    "headers": {
-        "accept": "application/json, text/plain, */*",
-        "accept-language": "en-US,en;q=0.9",
-        "access-control-allow-origin": "*",
-        "authorization": "Bearer 00C4470F2A5AB28B07543534CDDB6D2B",
-        "content-type": "application/json",
-        "deviceid": "57055e67-9ffa-4d20-a64c-34bbdb99b068",
-        "platform": "webnew",
-        "referer-url": "https://www.bachhoaxanh.com/he-thong-sieu-thi",
-        "reversehost": "http://bhxapi.live",
-        "sec-ch-ua": "\"Chromium\";v=\"129\", \"Not=A?Brand\";v=\"8\"",
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "\"Windows\"",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "cross-site",
-        "xapikey": "bhx-api-core-2022",
-        "Referer": "https://www.bachhoaxanh.com/he-thong-sieu-thi",
-        "Referrer-Policy": "no-referrer-when-downgrade"
-    },
-    "body": "{\"provinceId\":3,\"districtId\":0,\"wardId\":0,\"latitude\":0,\"longitude\":0}",
-    "method": "POST"
-}).then(res => res.json()).then(data => console.log(data));
+const bufferData = [10,63,10,16,112,67,111,109,109,97,110,100,67,111,110,116,114,97,99,116,18,43,8,0,24,0,34,37,83,69,76,69,67,84,32,84,79,80,32,48,32,42,32,70,82,79,77,32,66,51,48,66,105,122,68,111,99,68,101,116,97,105,108,83,79]
+// Step 2: Create a Buffer from this array and decode it
+const messageBuffer = Buffer.from(bufferData);
+const decodedMessage = messageBuffer.toString('utf-8');
+
+console.log("Decoded Message:", decodedMessage);

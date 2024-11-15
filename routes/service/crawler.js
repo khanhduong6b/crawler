@@ -41,8 +41,7 @@ function Crawler() {
                     }
                     return rq({ url: client.api.GET_ACCESS_TOKEN, method: 'post', data: options }).then(async response => {
                         if (response.data.status === 200) {
-                            await RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
-                            SELF.delay(1000)
+                            RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
                             return response.data.data.accessToken;
                         } else {
                             console.log(response.data.message)
@@ -72,12 +71,11 @@ function Crawler() {
                 FromDate: fDate, // dd/mm/yyyy
                 ToDate: tDate, // dd/mm/yyyy
                 PageIndex: 1,
-                PageSize: 2000,
+                PageSize: 5000,
                 Asscending: true
             }
             const accessToken = await SELF.getAccessToken()
-            return rq({ url: client.api.GET_DAILY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
-                Logger.info(fDate + ' - symbol: ' + symbol + ' - totalRecord: ' + response.data.totalRecord)
+            return rq({ url: client.api.GET_INTRADAY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
                 if (response.data.totalRecord > 0) {
                 return response.data.data.map(item => {
                     return {
@@ -99,6 +97,43 @@ function Crawler() {
             }).catch(async error => {
                 await RedisService.clearDataByKey('access_token')
                 Logger.error(error)
+                return []
+            })
+        },
+        getDailyData: async (symbol, fDate, tDate) => {
+            var request = {
+                Symbol: symbol,
+                FromDate: fDate, // dd/mm/yyyy
+                ToDate: tDate, // dd/mm/yyyy
+                PageIndex: 1,
+                PageSize: 5000,
+                Asscending: true
+            }
+            const accessToken = await SELF.getAccessToken()
+            return rq({ url: client.api.GET_DAILY_OHLC, method: 'get', headers: { [client.constants.AUTHORIZATION_HEADER]: client.constants.AUTHORIZATION_SCHEME + " " + accessToken }, params: request }).then(response => {
+                Logger.info(fDate + ' -> ' + tDate + ' - symbol: ' + symbol + ' - totalRecord: ' + response.data.totalRecord)
+                if (response.data.totalRecord > 0) {
+                return response.data.data.map(item => {
+                    return {
+                        symbol: item.Symbol,
+                        value: item.Value,
+                        tradingDate: `${item.TradingDate.slice(6, 10)}-${item.TradingDate.slice(3, 5)}-${item.TradingDate.slice(0, 2)}`,
+                        time: item.Time,
+                        open: item.Open,
+                        high: item.High,
+                        low: item.Low,
+                        close: item.Close,
+                        volume: item.Volume
+                    }
+                })
+                } else {
+                    console.log(response.data)
+                    return []
+                }
+            }).catch(async error => {
+                await RedisService.clearDataByKey('access_token')
+                Logger.error(error)
+                return []
             })
         }
     }
