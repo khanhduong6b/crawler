@@ -128,7 +128,7 @@ function StockController() {
         },
         storeNewData: async (symbol) => {
             const currentDate = new Date();
-            const dateInt = TimeUtil.getIntDateFromStrDate(currentDate)
+            const dateInt = TimeUtil.getIntDateFromStrDate(TimeUtil.getStrDate('DD/MM/YYYY', currentDate))
             const month = dateInt.toString().substring(4, 6)
             const year = dateInt.toString().substring(0, 4)
             const StockTransaction = SELF.getModelStockTransactionByMonthYear(month, year)
