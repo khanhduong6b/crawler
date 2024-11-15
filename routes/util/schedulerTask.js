@@ -12,8 +12,16 @@ function SchedulerTask() {
   }
   return {
     allTask: () => {
-      // every 5 minute in week from monday to friday
-      new CronJob('*/5 * * * 1-5', async function () {
+      // every 5 minutes from 9h to 16h, Monday to Friday
+      new CronJob('*/5 9-16 * * 1-5', async function () {
+        await RedisService.clearDataByKey('access_token')
+        const listStock = await Stock.find({}).lean()
+        for (let i = 0; i < listStock.length; i++) {
+          const symbol = listStock[i].symbol
+          await StockController.storeNewData(symbol)
+          Scheduler.info(symbol + ' - success')
+          await SELF.delay(1000)
+        }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       // every 30 minute in week from monday to friday
       new CronJob('*/3 * * * *', async function () {
