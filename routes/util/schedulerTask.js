@@ -19,8 +19,12 @@ function SchedulerTask() {
         const listStock = await Stock.find({ market: { $in: ['HNX', 'UPCOM'] } }).lean()
         for (let i = 0; i < listStock.length; i++) {
           const symbol = listStock[i].symbol
-          await StockController.storeNewData(symbol)
-          Scheduler.info(symbol + ' - success')
+          try {
+            await StockController.storeNewData(symbol)
+            Scheduler.info(symbol + ' - success')
+          } catch (error) {
+            Logger.error(error)
+          }
           await delay(1000);
         }
       }, null, true, 'Asia/Ho_Chi_Minh').start()

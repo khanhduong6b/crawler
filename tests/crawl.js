@@ -80,7 +80,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
     //await removeDuplicate()
 
-   await removeDuplicate()
+   //await removeDuplicate()
 
     //await StockController.storeNewData('TCI')
 })
