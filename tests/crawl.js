@@ -76,9 +76,11 @@ mongoose.connect(process.env.MONGODB).then(async () => {
         fdate = TimeUtil.getNextMonth(fdate)
     }
 
-    Logger.info('done crawl ' + fdate)
+    // Logger.info('done crawl ' + fdate)
 
     //await removeDuplicate()
+
+   await removeDuplicate()
 
     //await StockController.storeNewData('TCI')
 })
