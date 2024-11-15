@@ -16,7 +16,7 @@ const rq = axios.create({
 
 function StockController() {
     const SELF = {
-        createModelStockTransactionMonthYear: (month, year) => {
+        createModelStockTransactionBySymbol: (symbol) => {
             const schema = mongoose.Schema({
                 symbol: { type: String, index: true },
                 tradingDate: { type: String },
@@ -27,15 +27,15 @@ function StockController() {
                 close: { type: Number },
                 volume: { type: Number },
             }, { versionKey: false, timestamps: true, strict: false })
-            return mongoose.model(`stock_transaction_${month}${year}`, schema)
+            return mongoose.model(`stock_transaction_${symbol}`, schema)
         },
-        getModelStockTransactionByMonthYear: (month, year) => {
-            const modelName = `stock_transaction_${month}${year}`
+        getModelStockTransactionBySymbol: (symbol) => {
+            const modelName = `stock_transaction_${symbol}`
             if (mongoose.models[modelName]) {
                 return mongoose.models[modelName]; // Return the existing model
             } else {
                 // If it doesn't exist, create and return the model
-                return SELF.createModelStockTransactionMonthYear(month, year);
+                return SELF.createModelStockTransactionBySymbol(symbol);
             }
         },
         delay: (ms) => {
@@ -129,10 +129,7 @@ function StockController() {
         },
         storeNewData: async (symbol) => {
             const currentDate = new Date();
-            const dateInt = TimeUtil.getIntDateFromStrDate(TimeUtil.getStrDate('DD/MM/YYYY', currentDate))
-            const month = dateInt.toString().substring(4, 6)
-            const year = dateInt.toString().substring(0, 4)
-            const StockTransaction = SELF.getModelStockTransactionByMonthYear(month, year)
+            const StockTransaction = SELF.getModelStockTransactionBySymbol(symbol)
             try {
                 const [dataNew, dataOld] = await Promise.all([
                     Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
