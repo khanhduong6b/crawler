@@ -15,13 +15,13 @@ function SchedulerTask() {
       // every 1 hours from 9h to 16h, Monday to Friday
       new CronJob('0 * 9-16 * * 1-5', async function () {
         await RedisService.clearDataByKey('access_token')
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
         const listStock = await Stock.find({ market: { $in: ['HNX', 'UPCOM'] } }).lean()
         for (let i = 0; i < listStock.length; i++) {
-          setTimeout(async () => {
-            const symbol = listStock[i].symbol
-            await StockController.storeNewData(symbol)
-            Scheduler.info(symbol + ' - success')
-          }, 1000 * i)
+          const symbol = listStock[i].symbol
+          await StockController.storeNewData(symbol)
+          Scheduler.info(symbol + ' - success')
+          await delay(1000);
         }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       // every 30 minute in week from monday to friday
