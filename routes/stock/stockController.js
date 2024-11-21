@@ -6,7 +6,7 @@ const RedisService = require('../service/redisService')
 const axios = require("axios");
 const TimeUtil = require('../util/TimeUtil')
 const mongoose = require('mongoose')
-
+mongoose.pluralize(null);
 const client = require('ssi-fcdata')
 
 const rq = axios.create({
@@ -17,7 +17,6 @@ const rq = axios.create({
 function StockController() {
     const SELF = {
         createModelStockTransactionBySymbol: (symbol) => {
-            mongoose.pluralize(null);
             const schema = mongoose.Schema({
                 symbol: { type: String, index: true },
                 tradingDate: { type: String },
@@ -33,6 +32,7 @@ function StockController() {
         getModelStockTransactionBySymbol: (symbol) => {
             const modelName = `stock_transaction_${symbol}`
             if (mongoose.models[modelName]) {
+                console.log('check model')
                 return mongoose.models[modelName]; // Return the existing model
             } else {
                 // If it doesn't exist, create and return the model
@@ -66,20 +66,27 @@ function StockController() {
             try {
                 const symbol = req.query.symbol;
                 const page = req.query.page || 1;
-                if (!symbol) return res.status(200).json({ data: [] });
+                
+                const StockTransaction = SELF.getModelStockTransactionBySymbol(symbol);
+                const [data, totalDoc] = await Promise.all([
+                    StockTransaction.find(
+                        {},
+                        { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
+                    )
+                        .sort({ tradingDate: 1, time: 1 })
+                        .skip((page - 1) * 5000)
+                        .limit(5000)
+                        .lean(),
+                    StockTransaction.countDocuments()
+                ]);
 
-                const totalDoc = await StockTransaction.countDocuments({ symbol: symbol });
-
-                const data = await StockTransaction.find(
-                    { symbol: symbol },
-                    { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
-                ).sort({ tradingDate: 1, time: 1 }).skip((page - 1) * 10000).limit(10000).lean();
-
-                return res.status(200).json({ totalPage: Math.ceil(totalDoc / 10000), data });
+                return res.status(200).json({ totalPage: Math.ceil(totalDoc / 5000), data });
             } catch (error) {
+                Logger.error(JSON.stringify(error))
                 return res.status(500).json({ error });
             }
         },
+
         getNewData: async (req, res) => {
             try {
                 const symbol = req.query.symbol
@@ -88,16 +95,18 @@ function StockController() {
                 const today = new Date();
                 // Lấy chỉ số của ngày trong tuần (0 - Chủ Nhật, 1 - Thứ Hai, ..., 6 - Thứ Bảy)
                 const dayIndex = today.getDay();
+
+                const StockTransaction = SELF.getModelStockTransactionBySymbol(symbol)
                 if (dayIndex == 1) {
                     const data = await StockTransaction.find(
-                        { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000 * 3)) }] },
+                        { $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000 * 3)) }] },
                         { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
                     ).sort({ time: 1 }).lean();
                     return res.status(200).json({ data });
                 }
 
                 const data = await StockTransaction.find(
-                    { symbol: symbol, $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000)) }] },
+                    { $or: [{ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date()) }, { tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(new Date() - 60 * 60 * 24 * 1000)) }] },
                     { _id: 0, symbol: 1, tradingDate: 1, time: 1, open: 1, high: 1, low: 1, close: 1, volume: 1 }
                 ).sort({ time: 1 }).lean();
 

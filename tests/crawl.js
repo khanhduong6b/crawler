@@ -14,7 +14,8 @@ dotenv.config();
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-function createModelStockTransactionMonthYear(month, year) {
+function createModelStockTransactionBySymbol(symbol) {
+    mongoose.pluralize(null);
     const schema = mongoose.Schema({
         symbol: { type: String, index: true },
         tradingDate: { type: String },
@@ -25,17 +26,18 @@ function createModelStockTransactionMonthYear(month, year) {
         close: { type: Number },
         volume: { type: Number },
     }, { versionKey: false, timestamps: true, strict: false })
-    return mongoose.model(`stock_transaction_${month}${year}`, schema)
+    return mongoose.model(`stock_transaction_${symbol}`, schema)
 }
-function getModelStockTransactionByMonthYear(month, year) {
-    const modelName = `stock_transaction_${month}${year}`
+function getModelStockTransactionBySymbol(symbol) {
+    const modelName = `stock_transaction_${symbol}`
     if (mongoose.models[modelName]) {
         return mongoose.models[modelName]; // Return the existing model
     } else {
         // If it doesn't exist, create and return the model
-        return createModelStockTransactionMonthYear(month, year);
+        return createModelStockTransactionBySymbol(symbol);
     }
 }
+
 RedisService.initConnection()
 
 mongoose.Promise = global.Promise
@@ -44,15 +46,14 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // //await StockController.storeStock();
     console.log('done connect db')
     await RedisService.clearDataByKey('access_token')
-    let fdate = '01/01/2020'
+    let fdate = '19/11/2024'
     //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
     //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
     const listStock = await Stock.find().lean()
     //const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']
     //console.log(listStock)
     while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
-        const tdate = TimeUtil.getLastDayOfMonth(fdate)
-        console.log(fdate, tdate)
+        const tdate = '21/11/2024'
         for (let i = 0; i < listStock.length; i++) {
             const symbol = listStock[i].symbol
             if (symbol.length != 3) {
@@ -61,14 +62,17 @@ mongoose.connect(process.env.MONGODB).then(async () => {
             }
             try {
                 const data = await Crawler.getIntradayData(symbol, fdate, tdate)
+                Logger.info(fdate + ' -> ' + tdate + ' - symbol: ' + symbol + ' - totalRecord: ' + data.length)
                 const dateInt = TimeUtil.getIntDateFromStrDate(fdate)
                 const month = dateInt.toString().substring(4, 6)
                 const year = dateInt.toString().substring(0, 4)
-                const StockTransaction = getModelStockTransactionByMonthYear(month, year)
                 if (data.length > 0)
+                {
+                    const StockTransaction = await getModelStockTransactionBySymbol(symbol)
                     await StockTransaction.insertMany(data)
+                }
             } catch (error) {
-                Logger.error(error)
+                Logger.error(JSON.stringify(error))
             }
             await delay(1000)
         }
@@ -80,7 +84,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
     //await removeDuplicate()
 
-   //await removeDuplicate()
+    //await removeDuplicate()
 
     //await StockController.storeNewData('TCI')
 })

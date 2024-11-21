@@ -14,9 +14,8 @@ function SchedulerTask() {
     allTask: () => {
       // every 1 hours from 9h to 16h, Monday to Friday
       new CronJob('0 * 9-16 * * 1-5', async function () {
-        await RedisService.clearDataByKey('access_token')
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const listStock = await Stock.find({ market: { $in: ['HNX', 'UPCOM'] } }).lean()
+        const listStock = await Stock.find({ market: { $in: ['HNX', 'HOSE'] } }).lean()
         for (let i = 0; i < listStock.length; i++) {
           const symbol = listStock[i].symbol
           try {

@@ -1,6 +1,36 @@
-const bufferData = [10,63,10,16,112,67,111,109,109,97,110,100,67,111,110,116,114,97,99,116,18,43,8,0,24,0,34,37,83,69,76,69,67,84,32,84,79,80,32,48,32,42,32,70,82,79,77,32,66,51,48,66,105,122,68,111,99,68,101,116,97,105,108,83,79]
-// Step 2: Create a Buffer from this array and decode it
-const messageBuffer = Buffer.from(bufferData);
-const decodedMessage = messageBuffer.toString('utf-8');
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 
-console.log("Decoded Message:", decodedMessage);
+const Logger = require('./../routes/util/logController').Logger
+
+const TimeUtil = require('../routes/util/TimeUtil')
+const StockController = require('../routes/stock/stockController')
+const Crawler = require('../routes/service/crawler')
+const { Stock, StockTransaction } = require('../models/stock')
+const RedisService = require('../routes/service/redisService');
+
+dotenv.config();
+const schema = mongoose.Schema({
+    symbol: { type: String, index: true },
+    tradingDate: { type: String },
+    time: { type: String },
+    open: { type: Number },
+    high: { type: Number },
+    low: { type: Number },
+    close: { type: Number },
+    volume: { type: Number },
+}, { versionKey: false, timestamps: true, strict: false })
+
+mongoose.Promise = global.Promise
+mongoose.set('strictQuery', false)
+mongoose.pluralize(null);
+mongoose.connect(process.env.MONGODB).then(async () => {
+    console.log('done connect db')
+    const listStock = await Stock.find().lean()
+    for (let index = 0; index < listStock.length; index++) {
+        const element = listStock[index];
+        const model = mongoose.model(`stock_transaction_${element.symbol}`, schema)
+        await model.collection.dropIndex('symbol_1');
+        console.log(element.symbol)
+    }
+})
