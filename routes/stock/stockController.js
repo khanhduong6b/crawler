@@ -32,7 +32,6 @@ function StockController() {
         getModelStockTransactionBySymbol: (symbol) => {
             const modelName = `stock_transaction_${symbol}`
             if (mongoose.models[modelName]) {
-                console.log('check model')
                 return mongoose.models[modelName]; // Return the existing model
             } else {
                 // If it doesn't exist, create and return the model
@@ -41,7 +40,7 @@ function StockController() {
         },
         storePopularStock: async (symbol) => {
             const data = await RedisService.receiveTokenInRedis('popular_stock')
-            if (data.includes(symbol)) return
+            if (data && data?.includes(symbol)) return
             await RedisService.storeTokenInRedis('popular_stock', data + ',' + symbol)
             Logger.info('storePopularStock - success')
         },
@@ -95,7 +94,7 @@ function StockController() {
         getNewData: async (req, res) => {
             try {
                 const symbol = req.query.symbol
-                if (!symbol) return res.status(200).json({ data: [] })
+                if (!symbol || symbol == null) return res.status(200).json({ data: [] })
                 SELF.storePopularStock(symbol)
                 const today = new Date();
                 // Lấy chỉ số của ngày trong tuần (0 - Chủ Nhật, 1 - Thứ Hai, ..., 6 - Thứ Bảy)
