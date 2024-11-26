@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGODB).then(() => {
     app.listen(process.env.WEB_PORT, async () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${process.env.WEB_PORT}`);
       await RedisService.clearDataByKey('access_token')
-      SchedulerTask.allTask()
+      //SchedulerTask.allTask()
   });
 })
 
