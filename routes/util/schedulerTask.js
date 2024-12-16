@@ -43,7 +43,9 @@ function SchedulerTask() {
         await RedisService.clearDataByKey('access_token')
         const currentDate = TimeUtil.getStrDate('DD/MM/YYYY')
         await StockController.jobSaveDailyData(currentDate)
-        await StockController.jobSaveIntradayData(currentDate, currentDate)
+        setTimeout(async () => {
+          await StockController.jobSaveIntradayData(currentDate, currentDate)
+        }, 1000)
         Logger.info('jobSaveDailyData - success')
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 8 1 * *', function () { //Run 8:00 am first day of month

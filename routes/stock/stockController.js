@@ -170,8 +170,6 @@ function StockController() {
                 try {
                     const dataNew = await Crawler.getDailyData(symbol, currentDate, currentDate)
                     await StockTransaction.insertMany(dataNew)
-                    //await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
-                    Logger.info(currentDate + ' -> ' + currentDate + ' - symbol: ' + symbol + ' - totalRecord: ' + dataNew.length)
                 } catch (error) {
                     Logger.error(error)
                 }

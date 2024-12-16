@@ -134,7 +134,7 @@ function Crawler() {
             }).catch(async error => {
                 await RedisService.clearDataByKey('access_token')
                 Logger.error(error)
-                return []
+                return Promise.reject(error)
             })
         }
     }

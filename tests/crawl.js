@@ -46,47 +46,45 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // //await StockController.storeStock();
     console.log('done connect db')
     await RedisService.clearDataByKey('access_token')
-    let fdate = '22/11/2024'
+    let fdate = '23/11/2024'
     //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
     //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
     const listStock = await Stock.find().lean()
     //const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']
     //console.log(listStock)
-    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 0) {
-        const tdate = '22/11/2024'
-        for (let i = 0; i < listStock.length; i++) {
-            const symbol = listStock[i].symbol
-            if (symbol.length != 3) {
-                console.log(symbol)
-                continue
-            }
-            try {
-                const data = await Crawler.getIntradayData(symbol, fdate, tdate)
-                Logger.info(fdate + ' -> ' + tdate + ' - symbol: ' + symbol + ' - totalRecord: ' + data.length)
-                const dateInt = TimeUtil.getIntDateFromStrDate(fdate)
-                const month = dateInt.toString().substring(4, 6)
-                const year = dateInt.toString().substring(0, 4)
-                if (data.length > 0)
-                {
-                    const StockTransaction = await getModelStockTransactionBySymbol(symbol)
-                    await StockTransaction.insertMany(data)
-                }
-            } catch (error) {
-                Logger.error(JSON.stringify(error))
-            }
-            await delay(1000)
-        }
-        Logger.info('done crawl ' + fdate)
-        fdate = TimeUtil.getNextMonth(fdate)
-    }
+    // while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 0) {
+    //     const tdate = '22/11/2024'
+    //     for (let i = 0; i < listStock.length; i++) {
+    //         const symbol = listStock[i].symbol
+    //         if (symbol.length != 3) {
+    //             console.log(symbol)
+    //             continue
+    //         }
+    //         try {
+    //             const data = await Crawler.getIntradayData(symbol, fdate, tdate)
+    //             Logger.info(fdate + ' -> ' + tdate + ' - symbol: ' + symbol + ' - totalRecord: ' + data.length)
+    //             if (data.length > 0)
+    //             {
+    //                 const StockTransaction = await getModelStockTransactionBySymbol(symbol)
+    //                 await StockTransaction.insertMany(data)
+    //             }
+    //         } catch (error) {
+    //             Logger.error(JSON.stringify(error))
+    //         }
+    //         await delay(1000)
+    //     }
+    //     Logger.info('done crawl ' + fdate)
+    //     fdate = TimeUtil.getNextMonth(fdate)
+    // }
 
     // Logger.info('done crawl ' + fdate)
-
     //await removeDuplicate()
-
-    //await removeDuplicate()
-
-    //await StockController.storeNewData('TCI')
+    console.log(TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate))
+    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) != 0) {
+        await StockController.jobSaveDailyData(fdate)
+        Logger.info('done crawl ' + fdate)
+        fdate = TimeUtil.getNextDate(fdate)
+    }
 })
 
 // async function removeDuplicate() {
