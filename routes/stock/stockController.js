@@ -38,6 +38,12 @@ function StockController() {
                 return SELF.createModelStockTransactionBySymbol(symbol);
             }
         },
+        storePopularStock: async (symbol) => {
+            const data = await RedisService.receiveTokenInRedis('popular_stock')
+            if (data && data?.includes(symbol)) return
+            await RedisService.storeTokenInRedis('popular_stock', data + ',' + symbol)
+            Logger.info('storePopularStock - success')
+        },
         delay: (ms) => {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
@@ -65,7 +71,7 @@ function StockController() {
             try {
                 const symbol = req.query.symbol;
                 const page = req.query.page || 1;
-                
+
                 const StockTransaction = SELF.getModelStockTransactionBySymbol(symbol);
                 const [data, totalDoc] = await Promise.all([
                     StockTransaction.find(
@@ -85,13 +91,11 @@ function StockController() {
                 return res.status(500).json({ error });
             }
         },
-
         getNewData: async (req, res) => {
             try {
                 const symbol = req.query.symbol
-                RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
-                if (!symbol) return res.status(200).json({ data: [] })
-
+                if (!symbol || symbol == null) return res.status(200).json({ data: [] })
+                SELF.storePopularStock(symbol)
                 const today = new Date();
                 // Lấy chỉ số của ngày trong tuần (0 - Chủ Nhật, 1 - Thứ Hai, ..., 6 - Thứ Bảy)
                 const dayIndex = today.getDay();
@@ -146,7 +150,7 @@ function StockController() {
                     StockTransaction.find({ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
                 ])
                 if (dataOld.length != dataNew.length) {
-                    await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
+                    await StockTransaction.deleteMany({ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
                     await StockTransaction.insertMany(dataNew)
                     //await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
                     Logger.info('storeNewData ' + symbol + ' - success')
@@ -155,8 +159,7 @@ function StockController() {
                 Logger.error(error)
             }
         },
-        jobSaveDailyData: async () => {
-            const currentDate = TimeUtil.getStrDate('DD/MM/YYYY');
+        jobSaveDailyData: async (currentDate) => {
             const listStock = await Stock.find().lean()
             for (let i = 0; i < listStock.length; i++) {
                 const symbol = listStock[i].symbol
@@ -175,6 +178,29 @@ function StockController() {
                 await SELF.delay(1000)
             }
         },
+        jobSaveIntradayData: async (fdate, tdate) => {
+            const listStock = await Stock.find().lean()
+            for (let i = 0; i < listStock.length; i++) {
+                const symbol = listStock[i].symbol
+                if (symbol.length != 3) {
+                    console.log(symbol)
+                    continue
+                }
+                try {
+                    const data = await Crawler.getIntradayData(symbol, fdate, tdate)
+                    Logger.info(fdate + ' -> ' + tdate + ' - symbol: ' + symbol + ' - totalRecord: ' + data.length)
+                    if (data.length > 0) {
+                        const StockTransaction = await SELF.getModelStockTransactionBySymbol(symbol)
+                        await StockTransaction.deleteMany({ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', new Date(fdate)) })
+                        await StockTransaction.insertMany(data)
+                    }
+                } catch (error) {
+                    Logger.error(JSON.stringify(error))
+                }
+                await delay(1000)
+            }
+            Logger.info('done crawl ' + fdate + ' -> ' + tdate)
+        }
     }
 }
 

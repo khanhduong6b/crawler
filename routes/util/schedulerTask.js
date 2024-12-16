@@ -12,19 +12,23 @@ function SchedulerTask() {
   }
   return {
     allTask: () => {
-      // every 1 hours from 9h to 16h, Monday to Friday
-      new CronJob('0 * 9-16 * * 1-5', async function () {
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const listStock = await Stock.find({ market: { $in: ['HNX', 'HOSE'] } }).lean()
+      // every 1 minute in week from monday to friday
+      new CronJob('*/1 * * * *', async function () {
+        const data = await RedisService.receiveTokenInRedis('popular_stock')
+        if (data == null) return
+        const listStock = data.split(',')
         for (let i = 0; i < listStock.length; i++) {
-          const symbol = listStock[i].symbol
+          const symbol = listStock[i]
+          if (symbol.length != 3) {
+            continue
+          }
           try {
             await StockController.storeNewData(symbol)
+            await SELF.delay(1000);
             Scheduler.info(symbol + ' - success')
           } catch (error) {
             Logger.error(error)
           }
-          await delay(1000);
         }
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       // every 30 minute in week from monday to friday
@@ -37,7 +41,9 @@ function SchedulerTask() {
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 0 23 * * 1-5', async function () {
         await RedisService.clearDataByKey('access_token')
-        await StockController.jobSaveDailyData()
+        const currentDate = TimeUtil.getStrDate('DD/MM/YYYY')
+        await StockController.jobSaveDailyData(currentDate)
+        await StockController.jobSaveIntradayData(currentDate, currentDate)
         Logger.info('jobSaveDailyData - success')
       }, null, true, 'Asia/Ho_Chi_Minh').start()
       new CronJob('0 8 1 * *', function () { //Run 8:00 am first day of month
