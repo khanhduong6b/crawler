@@ -46,14 +46,14 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // //await StockController.storeStock();
     console.log('done connect db')
     await RedisService.clearDataByKey('access_token')
-    let fdate = '19/11/2024'
+    let fdate = '22/11/2024'
     //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
     //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
     const listStock = await Stock.find().lean()
     //const listStock = ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']
     //console.log(listStock)
-    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 1) {
-        const tdate = '21/11/2024'
+    while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) == 0) {
+        const tdate = '22/11/2024'
         for (let i = 0; i < listStock.length; i++) {
             const symbol = listStock[i].symbol
             if (symbol.length != 3) {

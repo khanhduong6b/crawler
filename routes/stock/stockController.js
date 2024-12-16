@@ -32,7 +32,6 @@ function StockController() {
         getModelStockTransactionBySymbol: (symbol) => {
             const modelName = `stock_transaction_${symbol}`
             if (mongoose.models[modelName]) {
-                console.log('check model')
                 return mongoose.models[modelName]; // Return the existing model
             } else {
                 // If it doesn't exist, create and return the model
@@ -90,6 +89,7 @@ function StockController() {
         getNewData: async (req, res) => {
             try {
                 const symbol = req.query.symbol
+                RedisService.storeTokenInRedis('access_token', response.data.data.accessToken)
                 if (!symbol) return res.status(200).json({ data: [] })
 
                 const today = new Date();
@@ -143,13 +143,13 @@ function StockController() {
             try {
                 const [dataNew, dataOld] = await Promise.all([
                     Crawler.getIntradayData(symbol, TimeUtil.getStrDate('DD/MM/YYYY', currentDate), TimeUtil.getStrDate('DD/MM/YYYY', currentDate)),
-                    StockTransaction.find({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
+                    StockTransaction.find({ tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) }).lean()
                 ])
                 if (dataOld.length != dataNew.length) {
                     await StockTransaction.deleteMany({ symbol: symbol, tradingDate: TimeUtil.getStrDate('YYYY-MM-DD', currentDate) })
                     await StockTransaction.insertMany(dataNew)
                     //await RedisService.storeTokenInRedis(symbol, JSON.stringify(dataNew))
-                    Logger.info('storeNewData - success')
+                    Logger.info('storeNewData ' + symbol + ' - success')
                 }
             } catch (error) {
                 Logger.error(error)
