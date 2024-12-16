@@ -12,8 +12,8 @@ function SchedulerTask() {
   }
   return {
     allTask: () => {
-      // every 1 minute in week from monday to friday
-      new CronJob('*/1 * * * *', async function () {
+      // every 1 minute from 8 am to 5 pm in week
+      new CronJob('*/1 * 8-17 * 1-5', async function () {
         const data = await RedisService.receiveTokenInRedis('popular_stock')
         if (data == null) return
         const listStock = data.split(',')
