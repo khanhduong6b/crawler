@@ -225,7 +225,7 @@ function TimeUtil() {
       const nextMonthYear = nextMonth.getFullYear();
 
       // Format the date as dd/mm/yyyy
-      const formattedNextMonth = `${String(nextMonthDay).padStart(2, '0')}/${String(nextMonthMonth).padStart(2, '0')}/${nextMonthYear}`;
+      const formattedNextMonth = `01/${String(nextMonthMonth).padStart(2, '0')}/${nextMonthYear}`;
 
       return formattedNextMonth;
     },

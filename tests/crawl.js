@@ -46,7 +46,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // //await StockController.storeStock();
     console.log('done connect db')
     await RedisService.clearDataByKey('access_token')
-    let fdate = '23/11/2024'
+    let fdate = '25/11/2024'
     //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
     //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
     const listStock = await Stock.find().lean()
@@ -79,11 +79,24 @@ mongoose.connect(process.env.MONGODB).then(async () => {
 
     // Logger.info('done crawl ' + fdate)
     //await removeDuplicate()
-    console.log(TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate))
     while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) != 0) {
-        await StockController.jobSaveDailyData(fdate)
+        const tdate = TimeUtil.getLastDayOfMonth(fdate)
+        for (let i = 0; i < listStock.length; i++) {
+            const symbol = listStock[i].symbol
+            if (symbol.length != 3) {
+                console.log(symbol)
+                continue
+            }
+            try {
+                const dataNew = await Crawler.getDailyData(symbol, fdate, tdate)
+                await StockTransaction.insertMany(dataNew)
+                await delay(1000)
+            } catch (error) {
+                Logger.error(error)
+            }
+        }
         Logger.info('done crawl ' + fdate)
-        fdate = TimeUtil.getNextDate(fdate)
+        fdate = TimeUtil.getNextMonth(tdate)
     }
 })
 
