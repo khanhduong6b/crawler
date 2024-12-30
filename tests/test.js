@@ -29,8 +29,10 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     const listStock = await Stock.find().lean()
     for (let index = 0; index < listStock.length; index++) {
         const element = listStock[index];
-        const model = mongoose.model(`stock_transaction_${element.symbol}`, schema)
-        await model.collection.dropIndex('symbol_1');
         console.log(element.symbol)
+        const model = mongoose.model(`stock_transaction_${element.symbol}`, schema)
+        //remove collection
+        await mongoose.connection.db.dropCollection(`stock_transaction_${element.symbol}`)
     }
+    console.log('done')
 })

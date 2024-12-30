@@ -2,6 +2,7 @@ const CronJob = require('cron').CronJob
 const { Scheduler, Logger } = require('./logController')
 const RedisService = require('../service/redisService')
 const StockController = require('../stock/stockController')
+const TimeUtil = require('../util/TimeUtil')
 const { Stock } = require('../../models/stock')
 /**@class SchedulerTask*/
 function SchedulerTask() {

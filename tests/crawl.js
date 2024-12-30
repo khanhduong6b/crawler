@@ -46,7 +46,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // //await StockController.storeStock();
     console.log('done connect db')
     await RedisService.clearDataByKey('access_token')
-    let fdate = '25/11/2024'
+    let fdate = '23/12/2024'
     //const data = await Crawler.getIntradayData('TCI', '01/02/2024', '29/02/2024')
     //{$in: ['VPG', 'HPG', 'AGG', 'VIB', 'PNJ', 'FPT']}
     const listStock = await Stock.find().lean()
@@ -80,7 +80,7 @@ mongoose.connect(process.env.MONGODB).then(async () => {
     // Logger.info('done crawl ' + fdate)
     //await removeDuplicate()
     while (TimeUtil.compareDates(TimeUtil.getStrDate('DD/MM/YYYY', new Date()), fdate) != 0) {
-        const tdate = TimeUtil.getLastDayOfMonth(fdate)
+        const tdate = '27/12/2024'
         for (let i = 0; i < listStock.length; i++) {
             const symbol = listStock[i].symbol
             if (symbol.length != 3) {
